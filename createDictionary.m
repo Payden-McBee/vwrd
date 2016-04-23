@@ -51,6 +51,7 @@ for j = 1:numPatches
             patchPCAmatrix(   j,  (k-1)*patchSize+1:k*patchSize )= allPatches(k,:,j);
         end
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %normalize by variable
 normPatchPCAmatrix = patchPCAmatrix;
@@ -58,12 +59,14 @@ for i = 1:patchSize
     normPatchPCAmatrix(:,i) = patchPCAmatrix(:,i) - ones(numTotalPatches,1)*mean( patchPCAmatrix(:,i) );
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[V,D] = eig(cov(normPatchPCAmatrix));
+[U,S,V] = svd(patchPCAmatrix);
+%newS = max(S);
+%plot(newS)
+numComponents = 20; %40 was determind experimentally, they used 10 in the paper
+pcaPatches = patchPCAmatrix*V(:,1:numComponents);
+%convert to uint8 if too large
+numWords = 30;
+[idx,words] = kmeans(pcaPatches,numWords);
 
-%[U,S,V] = svd(patchPCAmatrix);
-coeff = pca(normPatchPCAmatrix);
-size(coeff)
-[pc,score,latent,tsquare] = princomp(normPatchPCAmatrix);
-cumsum(latent)./sum(latent);
-[coeff,score,latent,tsquared,explained] = pca(normPatchPCAmatrix);
-urbanDictionary = 0; nonurbanDictionary = 0;
+urbanDictionary = words;
+nonurbanDictionary = 0;
