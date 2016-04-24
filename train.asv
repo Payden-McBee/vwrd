@@ -1,0 +1,13 @@
+function train()
+
+%load training images
+directory = 'D:\Draper\trainingImages\MS\';
+images = loadImages(directory);
+
+%create words from training images
+dictionary = createDictionary(images);
+size(dictionary)
+
+%each mask differentiates urban (1) from non-urban (0) regions
+masks = loadImageRegionMasks(directory);
+createDistributions()

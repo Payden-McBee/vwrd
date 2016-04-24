@@ -45,8 +45,8 @@ allPatches = zeros(patchSize,patchSize,numTotalPatches);
 allPatchesMasks = zeros(patchSize,patchSize,numTotalPatches);
 numPatches = 0;
 for i = 1:numImages
-    tempPatch = cell2mat(allImagePatches(i));
-    tempPatchMask = cell2mat(allMaskPatches(i));
+    tempPatch = cell2mat(allMaskPatches(i));
+    tempPatchMask = cell2mat(allImagePatches(i));
     numPatches = numPatches + numPatchesEachImg(i);
     allPatches( : , : , numPatches - numPatchesEachImg(i) + 1 : numPatches ) = tempPatch; %it's more complicated than that
     allPatchesMasks( : , : , numPatches - numPatchesEachImg(i) + 1 : numPatches ) = tempPatchMask;
@@ -69,12 +69,13 @@ for i = 1:patchSize
     normPatchPCAmatrix(:,i) = patchPCAmatrix(:,i) - ones(numTotalPatches,1)*mean( patchPCAmatrix(:,i) );
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+size(patchPCAmatrix)
 [U,S,V] = svd(normPatchPCAmatrix);
 %newS = max(S);
 %plot(newS)
 numComponents = 15; %40 was determind experimentally, they used 10 in the paper
 PCAtransformVector = V(:,1:numComponents);
-pcaPatches = normPatchPCAmatrix*PCAtransformVector;
+pcaPatches = patchPCAmatrix*PCAtransformVector;
 %convert to uint8 if too large
 numWords = 60;
 [idx,words] = kmeans(pcaPatches,numWords);
@@ -95,8 +96,7 @@ classifiedPatches = zeros(numTotalPatches,1);
 urban = 1;
 nonurban = 0;
 for i = 1:numTotalPatches
-    mean(allPatchesMasksInRows(i,:)) %%test
-    if mean(allPatchesMasksInRows(i,:)) > 0.5
+    if mean(allPatchesMasks(i,:)) > 0.5
         classifiedPatches(i) = urban;
     else
         classifiedPatches(i) = nonurban;
