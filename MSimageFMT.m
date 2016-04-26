@@ -1,4 +1,4 @@
-function [] = MSimageFMT(img)
+function simg = MSimageFMT(img)
 
 RGB = img(:,:,1:3) ;
 DRGB = double(RGB) ;
@@ -16,3 +16,5 @@ for i=1:3
     simg(:,:,i) = temp ;
 end
 imshow(simg) ;
+
+

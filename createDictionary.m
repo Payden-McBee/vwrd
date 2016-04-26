@@ -1,6 +1,5 @@
-function [dictionary,classifiedPatches,patchWordID] = createDictionary(images, masks)
+function [dictionary, trueClassifiedPatches, PCAtransformVector, pcaPatches] = createDictionary(images, masks, patchSize, numComponentsPCA)
 numImages = size(images,1);
-patchSize = 11; 
 allImagePatches = cell(numImages,1);
 allMaskPatches = cell(numImages,1);
 numTotalPatches = 0;
@@ -52,53 +51,44 @@ for i = 1:numImages
     allPatchesMasks( : , : , numPatches - numPatchesEachImg(i) + 1 : numPatches ) = tempPatchMask;
 end 
 
-%do PCA on patches
-patchPCAmatrix = zeros(numTotalPatches,patchSize*patchSize);
+patchesMatrix = zeros(numTotalPatches,patchSize*patchSize);
 allPatchesMasksInRows = zeros(numTotalPatches,patchSize*patchSize);
 for j = 1:numPatches
         for k =1:patchSize
-            patchPCAmatrix(   j,  (k-1)*patchSize+1:k*patchSize )= allPatches(k,:,j);
+            patchesMatrix(   j,  (k-1)*patchSize+1:k*patchSize )= allPatches(k,:,j);
             allPatchesMasksInRows(   j,  (k-1)*patchSize+1:k*patchSize ) = allPatchesMasks(k,:,j);
         end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %normalize by variable
-normPatchPCAmatrix = patchPCAmatrix;
+normPatchesMatrix = patchesMatrix;
 for i = 1:patchSize
-    normPatchPCAmatrix(:,i) = patchPCAmatrix(:,i) - ones(numTotalPatches,1)*mean( patchPCAmatrix(:,i) );
+    normPatchesMatrix(:,i) = patchesMatrix(:,i) - ones(numTotalPatches,1)*mean( patchesMatrix(:,i) );
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[U,S,V] = svd(normPatchPCAmatrix);
+
+
+%do PCA on patches
+[U,S,V] = svd(normPatchesMatrix);
 %newS = max(S);
 %plot(newS)
-numComponents = 15; %40 was determind experimentally, they used 10 in the paper
-PCAtransformVector = V(:,1:numComponents);
-pcaPatches = normPatchPCAmatrix*PCAtransformVector;
+ %40 was determind experimentally, they used 10 in the paper, numComponents
+PCAtransformVector = V(:,1:numComponentsPCA);
+pcaPatches = normPatchesMatrix*PCAtransformVector;
 %convert to uint8 if too large
 numWords = 60;
 [idx,words] = kmeans(pcaPatches,numWords);
-patchWordID = zeros(size(pcaPatches,1),1);
-for i = 1:numTotalPatches
-    pcaPatchV = zeros(numWords,numComponents);
-    for j = 1:numComponents
-        pcaPatchV(:,j) = pcaPatches(i,j);
-    end
-    distance = sum(((pcaPatchV - words).^2),2);
-    [~,patchWordID(i)] = min(distance);
-end
+
 dictionary = words;
-
-
-%each patch is assigned an urban/nonurban value
-classifiedPatches = zeros(numTotalPatches,1);
 urban = 1;
 nonurban = 0;
+%each patch is assigned an urban/nonurban value
+trueClassifiedPatches = zeros(numPatches,1);
 for i = 1:numTotalPatches
-    mean(allPatchesMasksInRows(i,:)) %%test
     if mean(allPatchesMasksInRows(i,:)) > 0.5
-        classifiedPatches(i) = urban;
+        trueClassifiedPatches(i) = urban;
     else
-        classifiedPatches(i) = nonurban;
+        trueClassifiedPatches(i) = nonurban;
     end
 end

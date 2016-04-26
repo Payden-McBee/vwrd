@@ -1,18 +1,17 @@
-function [Purban, Pnonurban, PurbanGword] = createHistogramsAndDistributions(dictionary, classifiedPatches, patchWordID)
+function [Purban, Pnonurban, PurbanGword] = createHistogramsAndDistributions(dictionary, trueClassifiedPatches, EuclideanClassifiedPatches)
 numWords = size(dictionary,1);
 Purban = zeros(1,numWords);
 Pnonurban = zeros(1,numWords);
-PurbanGword = zeros(1,numWords);
-numUrbanPatches = sum(classifiedPatches);
-TotalNumPatches = size(classifiedPatches,1);
+numUrbanPatches = sum(trueClassifiedPatches);
+TotalNumPatches = size(trueClassifiedPatches,1);
 numNonUrbanPatches = TotalNumPatches - numUrbanPatches;
 urban = 1;
 nonurban = 0;
 for i = 1:TotalNumPatches
-    if classifiedPatches(i) == urban
-        Purban(patchWordID(i)) = Purban(patchWordID(i)) + 1;
+    if trueClassifiedPatches(i) == urban
+        Purban(EuclideanClassifiedPatches(i)) = Purban(EuclideanClassifiedPatches(i)) + 1;
     else
-        Pnonurban(patchWordID(i)) = Pnonurban(patchWordID(i)) + 1;
+        Pnonurban(EuclideanClassifiedPatches(i)) = Pnonurban(EuclideanClassifiedPatches(i)) + 1;
     end
 end
 size(Purban)
